@@ -37,9 +37,10 @@ In terminal inside docker container, run:
 
 ```bash
 cd /home/developer/ros2_ws
-source ./setup.sh <id>
+source ./setup.sh 23
 ./build.sh
 source install/setup.bash
+cd src
 ```
 
 The `<id>` will be set as `ROS_DOMAIN_ID` in the Docker environment. 

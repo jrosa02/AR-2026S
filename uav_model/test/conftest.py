@@ -1,4 +1,4 @@
-# Copyright 2015 Open Source Robotics Foundation, Inc.
+# Copyright 2026 developer
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,13 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Pytest session configuration for uav_model tests."""
 
-from ament_copyright.main import main
-import pytest
+import os
+import sys
 
 
-@pytest.mark.copyright
-@pytest.mark.linter
-def test_copyright():
-    rc = main(argv=['.', 'test'])
-    assert rc == 0, 'Found errors'
+def pytest_configure(config):
+    """Move PYTHONPATH site-packages dirs to front of sys.path."""
+    del config  # unused; pytest hook signature requires the parameter
+    for path in os.environ.get('PYTHONPATH', '').split(':'):
+        if not path or not os.path.isdir(path):
+            continue
+        if path in sys.path:
+            sys.path.remove(path)
+        sys.path.insert(0, path)

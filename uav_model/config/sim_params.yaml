@@ -1,0 +1,6 @@
+uav_model_sim:
+  ros__parameters:
+    sim_rate_hz: 500.0
+    control_topic: "/cf_control/control_command"
+    state_topic: "/uav_model/odom"
+    initial_state: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]

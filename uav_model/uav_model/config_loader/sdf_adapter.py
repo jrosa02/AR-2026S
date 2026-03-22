@@ -31,7 +31,7 @@ class SDFAdapter:
         """Load and parse the SDF file at the given path."""
         self._tree = ET.parse(sdf_path)
         self._root = self._tree.getroot()
-        self._model = self._root.find('model')
+        self._model: None | ET.Element = self._root.find('model')
         if self._model is None:
             raise ValueError(f'No <model> element found in {sdf_path}')
 
@@ -65,7 +65,7 @@ class SDFAdapter:
 
     def _extract_body_inertial(self):
         """Find the body link (heaviest) and extract mass + inertia tensor."""
-        best_link = None
+        best_link: None | ET.Element = None
         best_mass = 0.0
 
         for link in self._model.findall('link'):
@@ -83,7 +83,10 @@ class SDFAdapter:
         if best_link is None:
             raise ValueError('No link with <inertial>/<mass> found in SDF')
 
-        inertia_el = best_link.find('inertial/inertia')
+        inertia_el: None | ET.Element = best_link.find('inertial/inertia')
+        if inertia_el is None:
+            raise ValueError('No link with inertial/inertia found in SDF')
+        
         ixx = float(inertia_el.findtext('ixx', '0'))
         iyy = float(inertia_el.findtext('iyy', '0'))
         izz = float(inertia_el.findtext('izz', '0'))

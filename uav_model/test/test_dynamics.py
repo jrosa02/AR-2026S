@@ -106,7 +106,8 @@ def test_hover_equilibrium(model):
     u = np.array([_MASS * _GRAVITY, 0.0, 0.0, 0.0], dtype=np.float64)
     pos_before = model.position.copy()
     vel_before = model.velocity.copy()
-    model.step(u, dt=0.001)
+    for _ in range(100):
+        model.step(u, dt=0.001)
     assert np.allclose(model.position, pos_before, atol=1e-12)
     assert np.allclose(model.velocity, vel_before, atol=1e-12)
 

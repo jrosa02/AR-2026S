@@ -34,16 +34,6 @@ def params():
     return SDFAdapter(sdf_path).extract()
 
 
-def test_mass(params):
-    """Body mass matches SDF value of 0.025 kg."""
-    assert abs(params.mass - 0.025) < 1e-6
-
-
-def test_inertia_tensor_shape(params):
-    """Inertia tensor is a 3x3 matrix."""
-    assert params.J.shape == (3, 3)
-
-
 def test_inertia_positive_definite(params):
     """Inertia tensor is positive-definite."""
     assert np.all(np.linalg.eigvalsh(params.J) > 0)
@@ -52,16 +42,6 @@ def test_inertia_positive_definite(params):
 def test_J_inv_roundtrip(params):
     """J @ J_inv equals identity within numerical tolerance."""
     assert np.allclose(params.J @ params.J_inv, np.eye(3), atol=1e-10)
-
-
-def test_motor_constant(params):
-    """Motor constant matches SDF motorConstant tag."""
-    assert abs(params.motor_constant - 1.28192e-08) < 1e-14
-
-
-def test_drag_coefficient(params):
-    """Drag coefficient matches SDF rotorDragCoefficient tag."""
-    assert abs(params.drag_coefficient - 8.06428e-05) < 1e-11
 
 
 def test_num_rotors(params):

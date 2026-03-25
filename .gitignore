@@ -1,5 +1,8 @@
 # ROS
 logs/
+log/
+build/
+install/
 rosbags/
 
 # Python

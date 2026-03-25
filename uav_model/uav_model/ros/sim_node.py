@@ -15,12 +15,11 @@
 
 import numpy as np
 import rclpy
+from geometry_msgs.msg import Point, Quaternion, Twist, Vector3
+from nav_msgs.msg import Odometry
 from rclpy.node import Node
 
 from cf_control_msgs.msg import ThrustAndTorque
-from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Point, Quaternion, Twist, Vector3
-
 from uav_model.config_loader.sdf_adapter import SDFAdapter
 from uav_model.model.uav_model import UAVModel
 
@@ -34,37 +33,23 @@ class SimNode(Node):
 
         self.declare_parameter('sdf_path', '')
         self.declare_parameter('sim_rate_hz', 500.0)
-        self.declare_parameter(
-            'control_topic', '/cf_control/control_command'
-        )
+        self.declare_parameter('control_topic', '/cf_control/control_command')
         self.declare_parameter('state_topic', '/uav_model/odom')
         self.declare_parameter(
             'initial_state',
             [0.0] * 6 + [1.0] + [0.0] * 6,
         )
 
-        sdf_path = (
-            self.get_parameter('sdf_path').get_parameter_value().string_value
-        )
+        sdf_path = self.get_parameter('sdf_path').get_parameter_value().string_value
         if not sdf_path:
             self.get_logger().fatal('sdf_path parameter is required')
             raise RuntimeError('sdf_path parameter is required')
 
-        sim_rate = (
-            self.get_parameter('sim_rate_hz')
-            .get_parameter_value().double_value
-        )
-        control_topic = (
-            self.get_parameter('control_topic')
-            .get_parameter_value().string_value
-        )
-        state_topic = (
-            self.get_parameter('state_topic')
-            .get_parameter_value().string_value
-        )
+        sim_rate = self.get_parameter('sim_rate_hz').get_parameter_value().double_value
+        control_topic = self.get_parameter('control_topic').get_parameter_value().string_value
+        state_topic = self.get_parameter('state_topic').get_parameter_value().string_value
         initial_state = (
-            self.get_parameter('initial_state')
-            .get_parameter_value().double_array_value
+            self.get_parameter('initial_state').get_parameter_value().double_array_value
         )
 
         adapter = SDFAdapter(sdf_path)
@@ -78,8 +63,10 @@ class SimNode(Node):
         self._u = np.zeros(4, dtype=np.float64)
 
         self._sub = self.create_subscription(
-            ThrustAndTorque, control_topic,
-            self._control_cb, 10,
+            ThrustAndTorque,
+            control_topic,
+            self._control_cb,
+            10,
         )
         self._pub = self.create_publisher(Odometry, state_topic, 10)
         self._timer = self.create_timer(self._dt, self._step_cb)
@@ -107,10 +94,15 @@ class SimNode(Node):
         odom.child_frame_id = 'uav_model'
 
         odom.pose.pose.position = Point(
-            x=state[0], y=state[1], z=state[2],
+            x=state[0],
+            y=state[1],
+            z=state[2],
         )
         odom.pose.pose.orientation = Quaternion(
-            w=state[6], x=state[7], y=state[8], z=state[9],
+            w=state[6],
+            x=state[7],
+            y=state[8],
+            z=state[9],
         )
         odom.twist.twist = Twist(
             linear=Vector3(x=state[3], y=state[4], z=state[5]),

@@ -104,12 +104,12 @@ def test_wrench_yaw_torque_sign(model):
 def test_hover_equilibrium(model):
     """At exact hover thrust, position and velocity remain zero."""
     u = np.array([_MASS * _GRAVITY, 0.0, 0.0, 0.0], dtype=np.float64)
-    pos_before = model.position.copy()
-    vel_before = model.velocity.copy()
+    pos_before = model.state.position.copy()
+    vel_before = model.state.velocity.copy()
     for _ in range(100):
         model.step(u, dt=0.001)
-    assert np.allclose(model.position, pos_before, atol=1e-12)
-    assert np.allclose(model.velocity, vel_before, atol=1e-12)
+    assert np.allclose(model.state.position, pos_before, atol=1e-12)
+    assert np.allclose(model.state.velocity, vel_before, atol=1e-12)
 
 
 # ---------------------------------------------------------------------------
@@ -125,7 +125,7 @@ def test_free_fall_z(model):
         model.step(u, dt)
     t = n_steps * dt
     z_expected = -0.5 * _GRAVITY * t ** 2
-    z_actual = model.position[2]
+    z_actual = model.state.position[2]
     rel_err = abs(z_actual - z_expected) / abs(z_expected)
     assert rel_err < 1e-5, f'z={z_actual:.9f}, expected={z_expected:.9f}, rel_err={rel_err:.2e}'
 
@@ -135,8 +135,8 @@ def test_free_fall_xy_unchanged(model):
     u = np.zeros(4, dtype=np.float64)
     for _ in range(200):
         model.step(u, 0.001)
-    assert abs(model.position[0]) < 1e-15, f'x drifted: {model.position[0]}'
-    assert abs(model.position[1]) < 1e-15, f'y drifted: {model.position[1]}'
+    assert abs(model.state.position[0]) < 1e-15, f'x drifted: {model.state.position[0]}'
+    assert abs(model.state.position[1]) < 1e-15, f'y drifted: {model.state.position[1]}'
 
 
 def test_quat_norm_preserved(model):
@@ -145,5 +145,5 @@ def test_quat_norm_preserved(model):
     u = np.zeros(4, dtype=np.float64)
     for _ in range(5000):
         model.step(u, 0.001)
-    norm = np.linalg.norm(model.quaternion)
+    norm = np.linalg.norm(model.state.quaternion)
     assert abs(norm - 1.0) < 1e-12, f'Quaternion norm drifted to {norm}'

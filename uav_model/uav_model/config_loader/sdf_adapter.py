@@ -86,7 +86,7 @@ class SDFAdapter:
         inertia_el: None | ET.Element = best_link.find('inertial/inertia')
         if inertia_el is None:
             raise ValueError('No link with inertial/inertia found in SDF')
-        
+
         ixx = float(inertia_el.findtext('ixx', '0'))
         iyy = float(inertia_el.findtext('iyy', '0'))
         izz = float(inertia_el.findtext('izz', '0'))

@@ -23,6 +23,58 @@ _log = rclpy.logging.get_logger('uav_model')
 _STATE_DIM = 13
 
 
+class UAVState(np.ndarray):
+    """
+    13-element state vector with named-segment properties.
+
+    Layout: [position(3), velocity(3), quaternion(4), angular_velocity(3)]
+    """
+
+    def __new__(cls, data):
+        """Allocate a new UAVState by viewing data as this subclass."""
+        obj = np.asarray(data, dtype=np.float64).view(cls)
+        return obj
+
+    def __array_finalize__(self, obj):
+        """Satisfy NumPy subclassing protocol; no extra state to copy."""
+        pass
+
+    def __repr__(self):
+        """Return a human-readable breakdown of all state segments."""
+        p = self[0:3]
+        v = self[3:6]
+        q = self[6:10]
+        w = self[10:13]
+        return (
+            f'UAVState(\n'
+            f'  position        = [{p[0]:.4f}, {p[1]:.4f}, {p[2]:.4f}]\n'
+            f'  velocity        = [{v[0]:.4f}, {v[1]:.4f}, {v[2]:.4f}]\n'
+            f'  quaternion      = [{q[0]:.4f}, {q[1]:.4f}, {q[2]:.4f}, {q[3]:.4f}]\n'
+            f'  angular_velocity= [{w[0]:.4f}, {w[1]:.4f}, {w[2]:.4f}]\n'
+            f')'
+        )
+
+    @property
+    def position(self):
+        """Position slice x[0:3] (world frame, m)."""
+        return self[0:3]
+
+    @property
+    def velocity(self):
+        """Linear velocity slice x[3:6] (world frame, m/s)."""
+        return self[3:6]
+
+    @property
+    def quaternion(self):
+        """Orientation quaternion slice x[6:10] as [w, x, y, z]."""
+        return self[6:10]
+
+    @property
+    def angular_velocity(self):
+        """Angular velocity slice x[10:13] (body frame, rad/s)."""
+        return self[10:13]
+
+
 class UAVModel:
     """13-state rigid-body UAV dynamics model (Newton-Euler, fixed-step RK4)."""
 
@@ -42,7 +94,7 @@ class UAVModel:
             params.rotor_directions, dtype=np.float64
         ).copy()
 
-        self._x = np.zeros(_STATE_DIM, dtype=np.float64)
+        self._x = UAVState(np.zeros(_STATE_DIM))
         self._x[6] = 1.0  # identity quaternion (qw = 1)
 
         _log.info(
@@ -114,11 +166,11 @@ class UAVModel:
         return x + (dt / 6.0) * (k1 + 2.0 * k2 + 2.0 * k3 + k4)
 
     def step(self, u, dt):
-        """Advance one RK4 step, normalise quaternion, return state view."""
+        """Advance one RK4 step, normalise quaternion, return state."""
         x_new = self._rk4_step(self._x, u, dt)
         self.quat_normalize(x_new)
         self._x[:] = x_new
-        return self._x
+        return self._x  # UAVState
 
     # ------------------------------------------------------------------
     # Utilities
@@ -144,30 +196,10 @@ class UAVModel:
         return np.array([T, tx, ty, tz])
 
     # ------------------------------------------------------------------
-    # State accessors
+    # State accessor
     # ------------------------------------------------------------------
 
     @property
-    def state(self):
-        """Return a view of the full 13-element state vector."""
+    def state(self) -> 'UAVState':
+        """Return the UAVState (13-element state vector)."""
         return self._x
-
-    @property
-    def position(self):
-        """Return a view of the position slice x[0:3]."""
-        return self._x[0:3]
-
-    @property
-    def velocity(self):
-        """Return a view of the velocity slice x[3:6]."""
-        return self._x[3:6]
-
-    @property
-    def quaternion(self):
-        """Return a view of the quaternion slice x[6:10]."""
-        return self._x[6:10]
-
-    @property
-    def angular_velocity(self):
-        """Return a view of the angular velocity slice x[10:13]."""
-        return self._x[10:13]

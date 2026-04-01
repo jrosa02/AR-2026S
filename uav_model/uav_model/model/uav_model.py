@@ -75,6 +75,83 @@ class UAVState(np.ndarray):
         return self[10:13]
 
 
+class UAVFlatState(np.ndarray):
+    """
+    4-element state vector with named-segment properties.
+
+    Layout: [position(3), velocity(3), acceleration(3), jerk(3), snap(3), yaw, yaw_vel]
+    """
+
+    def __new__(cls, data):
+        """Allocate a new UAVState by viewing data as this subclass."""
+        obj = np.asarray(data, dtype=np.float64).view(cls)
+        return obj
+
+    def __array_finalize__(self, obj):
+        """Satisfy NumPy subclassing protocol; no extra state to copy."""
+        pass
+
+    def __repr__(self):
+        """Return a human-readable breakdown of flat output state."""
+        return (
+            f'UAVFlatState(\n'
+            f'  position        = [{self[0]:.4f}, {self[1]:.4f}, {self[2]:.4f}]\n'
+            f'  velocity        = [{self[3]:.4f}, {self[4]:.4f}, {self[5]:.4f}]\n'
+            f'  acceleration    = [{self[6]:.4f}, {self[7]:.4f}, {self[8]:.4f}]\n'
+            f'  jerk            = [{self[9]:.4f}, {self[10]:.4f}, {self[11]:.4f}]\n'
+            f'  snap            = [{self[2]:.4f}, {self[13]:.4f}, {self[14]:.4f}]\n'
+            f'  yaw             = {self[15]:.4f}\n'
+            f'  yaw_vel         = {self[16]:.4f}\n'
+            f')'
+        )
+
+    @property
+    def position(self):
+        """Position slice [0:3]."""
+        return self[0:3]
+
+    @property
+    def velocity(self):
+        """Velocity slice [3:6]."""
+        return self[3:6]
+
+    @property
+    def acceleration(self):
+        """Acceleration slice [6:9]."""
+        return self[6:9]
+
+    @property
+    def jerk(self):
+        """Jerk (d³r/dt³) slice [9:12]."""
+        return self[9:12]
+
+    @property
+    def snap(self):
+        """Snap (d⁴r/dt⁴) slice [12:15]."""
+        return self[12:15]
+
+    @property
+    def yaw(self):
+        """Yaw angle at index 15."""
+        return self[15]
+
+    @property
+    def yaw_vel(self):
+        """Yaw_vel angle at index 16."""
+        return self[16]
+
+    def to_UAVState(self) -> UAVState:
+        """Construct UAVState from UAVFlatState."""
+        return UAVState(
+            np.concat(
+                (
+                    self.position,
+                    self.velocity,
+                )
+            )
+        )
+
+
 class UAVModel:
     """13-state rigid-body UAV dynamics model (Newton-Euler, fixed-step RK4)."""
 
@@ -85,14 +162,14 @@ class UAVModel:
         self._J = np.array(params.J, dtype=np.float64)
         self._J_inv = np.array(params.J_inv, dtype=np.float64)
         self._num_rotors = int(params.num_rotors)
-        self._pos = np.asarray(
-            params.rotor_positions, dtype=np.float64
-        ).reshape(self._num_rotors, 3).copy()
+        self._pos = (
+            np.asarray(params.rotor_positions, dtype=np.float64)
+            .reshape(self._num_rotors, 3)
+            .copy()
+        )
         self._cT = float(params.motor_constant)
         self._cD = float(params.drag_coefficient)
-        self._dirs = np.asarray(
-            params.rotor_directions, dtype=np.float64
-        ).copy()
+        self._dirs = np.asarray(params.rotor_directions, dtype=np.float64).copy()
 
         self._x = UAVState(np.zeros(_STATE_DIM))
         self._x[6] = 1.0  # identity quaternion (qw = 1)
@@ -187,11 +264,11 @@ class UAVModel:
     def rotor_velocities_to_wrench(self, omega):
         """Convert rotor velocities (rad/s) to [T, tx, ty, tz] wrench."""
         omega = np.asarray(omega, dtype=np.float64)
-        w2 = omega ** 2
-        fi = self._cT * w2                      # thrust per rotor
+        w2 = omega**2
+        fi = self._cT * w2  # thrust per rotor
         T = np.sum(fi)
-        tx = np.dot(self._pos[:, 1], fi)        # sum(y_i * F_i)
-        ty = -np.dot(self._pos[:, 0], fi)       # sum(-x_i * F_i)
+        tx = np.dot(self._pos[:, 1], fi)  # sum(y_i * F_i)
+        ty = -np.dot(self._pos[:, 0], fi)  # sum(-x_i * F_i)
         tz = np.dot(self._dirs, self._cD * w2)  # sum(dir_i * cD * wi^2)
         return np.array([T, tx, ty, tz])
 

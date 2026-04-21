@@ -77,9 +77,9 @@ class UAVState(np.ndarray):
 
 class UAVFlatState(np.ndarray):
     """
-    4-element state vector with named-segment properties.
+    18-element flat output vector with named-segment properties.
 
-    Layout: [position(3), velocity(3), acceleration(3), jerk(3), snap(3), yaw, yaw_vel]
+    Layout: [position(3), velocity(3), acceleration(3), jerk(3), snap(3), yaw, yaw_vel, yaw_acc]
     """
 
     def __new__(cls, data):
@@ -99,9 +99,10 @@ class UAVFlatState(np.ndarray):
             f'  velocity        = [{self[3]:.4f}, {self[4]:.4f}, {self[5]:.4f}]\n'
             f'  acceleration    = [{self[6]:.4f}, {self[7]:.4f}, {self[8]:.4f}]\n'
             f'  jerk            = [{self[9]:.4f}, {self[10]:.4f}, {self[11]:.4f}]\n'
-            f'  snap            = [{self[2]:.4f}, {self[13]:.4f}, {self[14]:.4f}]\n'
+            f'  snap            = [{self[12]:.4f}, {self[13]:.4f}, {self[14]:.4f}]\n'
             f'  yaw             = {self[15]:.4f}\n'
             f'  yaw_vel         = {self[16]:.4f}\n'
+            f'  yaw_acc         = {self[17]:.4f}\n'
             f')'
         )
 
@@ -137,19 +138,27 @@ class UAVFlatState(np.ndarray):
 
     @property
     def yaw_vel(self):
-        """Yaw_vel angle at index 16."""
+        """Yaw rate at index 16 (rad/s)."""
         return self[16]
 
-    def to_UAVState(self) -> UAVState:
-        """Construct UAVState from UAVFlatState."""
-        return UAVState(
-            np.concat(
-                (
-                    self.position,
-                    self.velocity,
-                )
-            )
-        )
+    @property
+    def yaw_acc(self):
+        """Yaw acceleration at index 17 (rad/s²)."""
+        return self[17]
+
+    def to_UAVState(self, mass: float, gravity: float, J: 'np.ndarray') -> UAVState:
+        """Convert flat output to full UAVState via differential flatness.
+
+        Args:
+            mass:    Vehicle mass [kg].
+            gravity: Gravitational acceleration [m/s²].
+            J:       3×3 inertia tensor [kg·m²].
+
+        Returns:
+            FlatOutputResult with state, thrust, and torques.
+        """
+        from uav_model.model.flat_output import flat_to_full_state
+        return flat_to_full_state(self, mass, gravity, J)
 
 
 class UAVModel:

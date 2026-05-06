@@ -56,4 +56,10 @@ def generate_launch_description():
             ],
             output='screen',
         ),
+        Node(
+            package='uav_model',
+            executable='controller_node',
+            name='mellinger_controller',
+            output='screen',
+        ),
     ])

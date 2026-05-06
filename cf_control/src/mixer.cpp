@@ -35,9 +35,10 @@ Mixer::Mixer(const rclcpp::NodeOptions & options)
 {
   // Parameters
   this->declare_parameter("process_rate", 200.0);              // Hz
-  this->declare_parameter("arm_length", 0.046);                // meters
+  this->declare_parameter("arm_length", 0.04384);               // meters (motor_pos * sqrt(2) = 0.031*sqrt(2))
   this->declare_parameter("thrust_coefficient", 1.28192e-08);  // N/((rad/s)^2)
-  this->declare_parameter("drag_coefficient", 8.06428e-05);    // Nm/((rad/s)^2)
+  // Reactive yaw torque: momentConstant * thrustCoefficient = 0.005964552 * 1.28192e-8
+  this->declare_parameter("drag_coefficient", 7.6459e-11);     // Nm/((rad/s)^2)
 
   double process_rate = this->get_parameter("process_rate").as_double();
   double arm_length = this->get_parameter("arm_length").as_double();
@@ -115,7 +116,7 @@ void Mixer::process()
   motor_command.velocity = {motor_speed_1, motor_speed_2, motor_speed_3, motor_speed_4};
   motor_command_publisher_->publish(motor_command);
 
-  RCLCPP_INFO(
+  RCLCPP_DEBUG(
     this->get_logger(), "Published motor speeds: [%.2f, %.2f, %.2f, %.2f]", motor_speed_1,
     motor_speed_2, motor_speed_3, motor_speed_4);
 }

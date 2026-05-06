@@ -74,11 +74,27 @@ def generate_launch_description():
     #     ]
     # )
 
+    mixer = Node(
+        package='cf_control',
+        executable='mixer',
+        name='mixer',
+        output='screen',
+    )
+
+    controller = Node(
+        package='uav_model',
+        executable='controller_node',
+        name='mellinger_controller',
+        output='screen',
+        parameters=[{'odom_topic': '/crazyflie/odom'}],
+    )
+
     return LaunchDescription(
         [
             gz_ln_arg,
             gz_sim,
             bridge,
-            # control
+            mixer,
+            controller,
         ]
     )

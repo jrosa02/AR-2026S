@@ -104,8 +104,16 @@ class SimNode(Node):
             y=state[8],
             z=state[9],
         )
+        # Rotate world-frame velocity to body frame (standard nav_msgs/Odometry convention).
+        q = state[6:10]  # [w, x, y, z]
+        qv = q[1:4]
+        v_w = state[3:6]
+        # v_body = R^T @ v_world  ≡  rotate by conjugate quaternion
+        c = np.cross(qv, v_w)
+        v_body = v_w - 2.0 * (q[0] * c - np.cross(qv, c))
+
         odom.twist.twist = Twist(
-            linear=Vector3(x=state[3], y=state[4], z=state[5]),
+            linear=Vector3(x=v_body[0], y=v_body[1], z=v_body[2]),
             angular=Vector3(x=state[10], y=state[11], z=state[12]),
         )
 

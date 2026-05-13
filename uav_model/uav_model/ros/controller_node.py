@@ -98,15 +98,19 @@ class ControllerNode(Node):
         lv = msg.twist.twist.linear
         av = msg.twist.twist.angular
 
+        # nav_msgs/Odometry twist is in body frame; Mellinger needs world frame.
+        q_np = np.array([q.w, q.x, q.y, q.z])
+        lv_world = MellingerController._quat_to_rot(q_np) @ np.array([lv.x, lv.y, lv.z])
+
         self._state = UAVState(
             np.array(
                 [
                     p.x,
                     p.y,
                     p.z,
-                    lv.x,
-                    lv.y,
-                    lv.z,
+                    lv_world[0],
+                    lv_world[1],
+                    lv_world[2],
                     q.w,
                     q.x,
                     q.y,

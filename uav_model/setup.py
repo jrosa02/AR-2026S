@@ -28,7 +28,8 @@ setup(
         ('share/' + package_name + '/launch',
             ['launch/sim.launch.py']),
         ('share/' + package_name + '/config',
-            ['config/sim_params.yaml']),
+            ['config/sim_params.yaml', 'config/example_path.yaml',
+             'config/mpc_params.yaml']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -43,6 +44,11 @@ setup(
         'console_scripts': [
             'sim_node = uav_model.ros.sim_node:main',
             'controller_node = uav_model.ros.controller_node:main',
+            'trajectory_controller_node = uav_model.ros.trajectory_controller_node:main',
+            'path_publisher_node = uav_model.ros.path_publisher_node:main',
+            'mpc_controller_node = uav_model.ros.mpc_controller_node:main',
+            'simulate_and_plot = uav_model.scripts.simulate_and_plot:main',
+            'path_visualizer_node = uav_model.ros.path_visualizer_node:main',
         ],
     },
 )

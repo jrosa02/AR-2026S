@@ -1,0 +1,22 @@
+mpc_controller:
+  ros__parameters:
+    odom_topic: "/uav_model/odom"
+    control_topic: "/cf_control/control_command"
+    control_rate_hz: 100.0
+    mpc_rate_hz: 20.0
+    mpc_horizon: 20
+    mpc_dt: 0.05
+    mpc_q_pos: [10.0, 10.0, 10.0]
+    mpc_q_vel: [5.0, 5.0, 5.0]
+    mpc_r_acc: [0.1, 0.1, 0.1]
+    mpc_q_terminal: [100.0, 100.0, 100.0]
+    mpc_v_max: 1.5
+    mpc_a_max: 5.0
+    hover_x: 0.0
+    hover_y: 0.0
+    hover_z: 1.0
+    hover_yaw: 0.0
+    kx: [2.0, 2.0, 2.0]
+    kv: [3.0, 3.0, 3.0]
+    kR: [8.0e-3, 8.0e-3, 2.0e-3]
+    kOmega: [1.1e-3, 1.1e-3, 5.0e-4]

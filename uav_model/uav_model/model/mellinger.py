@@ -40,8 +40,12 @@ class MellingerGains:
 
     kx: np.ndarray = field(default_factory=lambda: np.array([4.0, 4.0, 4.0]))
     kv: np.ndarray = field(default_factory=lambda: np.array([2.8, 2.8, 2.8]))
+    # kR tuned for CrazyFlie (I_xx=I_yy=1.657e-5, I_zz=2.926e-5 kg·m²):
+    #   ω_n ≈ 22 rad/s (roll/pitch), 8.3 rad/s (yaw) → 9× above position bandwidth
+    #   ζ = 0.8 → near-critical (kOmega = 2·ζ·√(kR·I))
+    #   Actuator saturation threshold: ≈54° at hover — safe for liftoff transients
     kR: np.ndarray = field(default_factory=lambda: np.array([8.0e-3, 8.0e-3, 2.0e-3]))
-    kOmega: np.ndarray = field(default_factory=lambda: np.array([1.5e-3, 1.5e-3, 5.0e-4]))
+    kOmega: np.ndarray = field(default_factory=lambda: np.array([1.1e-3, 1.1e-3, 5.0e-4]))
 
     def __post_init__(self):
         """Broadcast scalar gains to 3-element arrays."""
@@ -108,7 +112,7 @@ class MellingerController:
         z_b_des = F_des / np.linalg.norm(F_des)
 
         R_actual = self._quat_to_rot(state.quaternion)
-        T = float(np.dot(F_des, R_actual[:, 2]))   # project onto current z_b
+        T = float(np.dot(F_des, R_actual[:, 2]))  # project onto current z_b
 
         # ---- Step 3: desired rotation matrix from yaw + z_b_des --------
         R_des = self._rot_des(z_b_des, float(desired.yaw))
@@ -117,14 +121,19 @@ class MellingerController:
         eR_mat = R_des.T @ R_actual - R_actual.T @ R_des
         e_R = 0.5 * self._vee(eR_mat)
 
-        # ---- Step 5: angular-velocity error (body frame) ---------------
-        omega_des = flat_to_full_state(desired, m, grav, self._J).state.angular_velocity
+        # ---- Step 5: angular-velocity error and feedforward torque --------
+        flat_result = flat_to_full_state(desired, m, grav, self._J)
+        omega_des = flat_result.state.angular_velocity
         e_omega = state.angular_velocity - R_actual.T @ R_des @ omega_des
+
+        # J @ α_des feedforward: flat_result.torques = J@α_des + ω_des×(J@ω_des),
+        # so subtract the gyroscopic term to isolate J@α_des.
+        tau_ff = flat_result.torques - np.cross(omega_des, self._J @ omega_des)
 
         # ---- Step 6: torque command ------------------------------------
         omega = state.angular_velocity
         gyro = np.cross(omega, self._J @ omega)
-        tau = -g.kR * e_R - g.kOmega * e_omega + gyro
+        tau = -g.kR * e_R - g.kOmega * e_omega + gyro + tau_ff
 
         return np.array([T, tau[0], tau[1], tau[2]])
 
@@ -136,11 +145,14 @@ class MellingerController:
     def _quat_to_rot(q: np.ndarray) -> np.ndarray:
         """Convert unit quaternion [w, x, y, z] to 3×3 rotation matrix."""
         w, x, y, z = q
-        return np.array([
-            [1 - 2*(y*y + z*z),   2*(x*y - w*z),       2*(x*z + w*y)],
-            [2*(x*y + w*z),        1 - 2*(x*x + z*z),   2*(y*z - w*x)],
-            [2*(x*z - w*y),        2*(y*z + w*x),        1 - 2*(x*x + y*y)],
-        ], dtype=np.float64)
+        return np.array(
+            [
+                [1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y)],
+                [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)],
+                [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)],
+            ],
+            dtype=np.float64,
+        )
 
     @staticmethod
     def _vee(M: np.ndarray) -> np.ndarray:

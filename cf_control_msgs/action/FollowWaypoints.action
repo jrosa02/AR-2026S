@@ -1,0 +1,11 @@
+# Goal
+cf_control_msgs/Waypoint[] waypoints
+---
+# Result
+int32 waypoints_reached
+string message
+---
+# Feedback
+int32 current_waypoint_index
+int32 total_waypoints
+float64 distance_to_current

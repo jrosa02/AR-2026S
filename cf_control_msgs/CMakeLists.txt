@@ -9,14 +9,21 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(action_msgs REQUIRED)
 
 set(msg_files
   "msg/ThrustAndTorque.msg"
+  "msg/Waypoint.msg"
+)
+
+set(action_files
+  "action/FollowWaypoints.action"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
-  DEPENDENCIES geometry_msgs
+  ${action_files}
+  DEPENDENCIES geometry_msgs action_msgs
 )
 
 if(BUILD_TESTING)

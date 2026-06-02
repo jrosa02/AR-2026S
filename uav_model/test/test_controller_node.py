@@ -14,7 +14,6 @@
 """Unit tests for the Mellinger controller node logic (no ROS spin required)."""
 
 import numpy as np
-import pytest
 
 from uav_model.config_loader.params import UAVParams
 from uav_model.model.mellinger import MellingerController, MellingerGains

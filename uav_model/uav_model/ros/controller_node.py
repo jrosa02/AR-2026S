@@ -53,7 +53,7 @@ class ControllerNode(Node):
         self.declare_parameter('kx', [6.0, 6.0, 6.0])
         self.declare_parameter('kv', [4.0, 4.0, 4.0])
         self.declare_parameter('kR', [8.0e-3, 8.0e-3, 2.0e-3])
-        self.declare_parameter('kOmega', [1.5e-3, 1.5e-3, 5.0e-4])
+        self.declare_parameter('kOmega', [1.1e-3, 1.1e-3, 5.0e-4])
 
         odom_topic = self.get_parameter('odom_topic').get_parameter_value().string_value
         control_topic = self.get_parameter('control_topic').get_parameter_value().string_value
@@ -74,7 +74,7 @@ class ControllerNode(Node):
         self._controller = MellingerController(params, gains)
 
         # Hover setpoint: all feedforward terms zero; only position and yaw set.
-        # Index layout of UAVFlatState: [pos(3), vel(3), acc(3), jerk(3), snap(3), yaw, yaw_vel, yaw_acc]
+        # UAVFlatState layout: pos(3) vel(3) acc(3) jerk(3) snap(3) yaw yaw_vel yaw_acc
         hover_data = np.zeros(18)
         hover_data[0:3] = [hover_x, hover_y, hover_z]
         hover_data[15] = hover_yaw

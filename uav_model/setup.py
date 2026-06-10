@@ -49,6 +49,7 @@ setup(
             'mpc_controller_node = uav_model.ros.mpc_controller_node:main',
             'simulate_and_plot = uav_model.scripts.simulate_and_plot:main',
             'path_visualizer_node = uav_model.ros.path_visualizer_node:main',
+            'coordinate_plotter_node = uav_model.ros.coordinate_plotter_node:main',
         ],
     },
 )

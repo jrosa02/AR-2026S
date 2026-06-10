@@ -31,6 +31,10 @@ def generate_launch_description():
         'use_rviz', default_value='false',
         description='Launch RViz2 with path visualization',
     )
+    plot_arg = DeclareLaunchArgument(
+        'use_plot', default_value='true',
+        description='Launch live x/y/z coordinate plot',
+    )
     traj_arg = DeclareLaunchArgument(
         'use_trajectory_controller', default_value='false',
         description='Use TrajectoryControllerNode instead of fixed-hover ControllerNode',
@@ -67,13 +71,12 @@ def generate_launch_description():
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
-        parameters=[
-            {
-                'config_file': os.path.join(
-                    pkg_project_bringup, 'config', 'ros_gz_crazyflie_bridge.yaml'
-                ),
-            }
-        ],
+        parameters=[{
+            'config_file': os.path.join(
+                pkg_project_bringup, 'config', 'ros_gz_crazyflie_bridge.yaml'
+            ),
+            'use_sim_time': True,
+        }],
         output='screen',
     )
 
@@ -89,16 +92,20 @@ def generate_launch_description():
     #     ]
     # )
 
+    _sim_time = {'use_sim_time': True}
+
     mixer = Node(
         package='cf_control',
         executable='mixer',
         name='mixer',
+        parameters=[_sim_time],
         output='screen',
     )
 
     use_traj = LaunchConfiguration('use_trajectory_controller')
     use_mpc = LaunchConfiguration('use_mpc_controller')
     use_rviz = LaunchConfiguration('use_rviz')
+    use_plot = LaunchConfiguration('use_plot')
     path_file = LaunchConfiguration('path_file')
     mpc_params_file = LaunchConfiguration('mpc_params_file')
 
@@ -111,7 +118,7 @@ def generate_launch_description():
         executable='controller_node',
         name='mellinger_controller',
         output='screen',
-        parameters=[{'odom_topic': '/crazyflie/odom'}],
+        parameters=[{'odom_topic': '/crazyflie/odom'}, _sim_time],
         condition=UnlessCondition(no_builtin_ctrl),
     )
 
@@ -120,7 +127,7 @@ def generate_launch_description():
         executable='trajectory_controller_node',
         name='trajectory_controller',
         output='screen',
-        parameters=[{'odom_topic': '/crazyflie/odom'}],
+        parameters=[{'odom_topic': '/crazyflie/odom'}, _sim_time],
         condition=IfCondition(use_traj),
     )
 
@@ -129,7 +136,7 @@ def generate_launch_description():
         executable='mpc_controller_node',
         name='mpc_controller',
         output='screen',
-        parameters=[{'odom_topic': '/crazyflie/odom'}, mpc_params_file],
+        parameters=[{'odom_topic': '/crazyflie/odom'}, mpc_params_file, _sim_time],
         condition=IfCondition(use_mpc),
     )
 
@@ -137,7 +144,7 @@ def generate_launch_description():
         package='uav_model',
         executable='path_publisher_node',
         name='path_publisher',
-        parameters=[{'path_file': path_file}],
+        parameters=[{'path_file': path_file}, _sim_time],
         output='screen',
         condition=IfCondition(
             PythonExpression([
@@ -151,7 +158,7 @@ def generate_launch_description():
         package='uav_model',
         executable='path_visualizer_node',
         name='path_visualizer',
-        parameters=[{'odom_topic': '/crazyflie/odom', 'path_file': path_file}],
+        parameters=[{'odom_topic': '/crazyflie/odom', 'path_file': path_file}, _sim_time],
         output='screen',
         condition=IfCondition(use_rviz),
     )
@@ -165,10 +172,20 @@ def generate_launch_description():
         condition=IfCondition(use_rviz),
     )
 
+    coordinate_plotter = Node(
+        package='uav_model',
+        executable='coordinate_plotter_node',
+        name='coordinate_plotter',
+        parameters=[{'odom_topic': '/crazyflie/odom'}, _sim_time],
+        output='screen',
+        condition=IfCondition(use_plot),
+    )
+
     return LaunchDescription(
         [
             gz_ln_arg,
             rviz_arg,
+            plot_arg,
             traj_arg,
             mpc_arg,
             path_file_arg,
@@ -182,5 +199,6 @@ def generate_launch_description():
             path_publisher,
             path_visualizer,
             rviz2,
+            coordinate_plotter,
         ]
     )

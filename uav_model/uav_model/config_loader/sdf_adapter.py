@@ -37,7 +37,7 @@ class SDFAdapter:
 
     def extract(self) -> UAVParams:
         """Extract all UAV physical parameters from the SDF."""
-        mass, J = self._extract_body_inertial()
+        mass, J = self._extract_mass_inertia()
         J_inv = np.linalg.inv(J)
         motors = self._extract_motors()
 
@@ -63,44 +63,59 @@ class SDFAdapter:
             rotor_directions=directions,
         )
 
-    def _extract_body_inertial(self):
-        """Find the body link (heaviest) and extract mass + inertia tensor."""
-        best_link: None | ET.Element = None
-        best_mass = 0.0
+    def _extract_mass_inertia(self):
+        """Aggregate mass and inertia (about the combined CoM) over all links.
 
+        The vehicle's true mass and inertia include the body link plus all
+        rotor links. Each link's inertia is given about its own CoM in
+        body-aligned axes, so the per-link tensors are recombined onto the
+        combined CoM via the parallel-axis theorem.
+        """
+        links = []
         for link in self._model.findall('link'):
             inertial = link.find('inertial')
             if inertial is None:
                 continue
             mass_el = inertial.find('mass')
-            if mass_el is None:
+            inertia_el = inertial.find('inertia')
+            if mass_el is None or inertia_el is None:
                 continue
-            m = float(mass_el.text)
-            if m > best_mass:
-                best_mass = m
-                best_link = link
 
-        if best_link is None:
+            m = float(mass_el.text)
+
+            pose_el = link.find('pose')
+            pos = np.zeros(3, dtype=np.float64)
+            if pose_el is not None:
+                pos = np.array(
+                    [float(v) for v in pose_el.text.split()[:3]], dtype=np.float64
+                )
+
+            ixx = float(inertia_el.findtext('ixx', '0'))
+            iyy = float(inertia_el.findtext('iyy', '0'))
+            izz = float(inertia_el.findtext('izz', '0'))
+            ixy = float(inertia_el.findtext('ixy', '0'))
+            ixz = float(inertia_el.findtext('ixz', '0'))
+            iyz = float(inertia_el.findtext('iyz', '0'))
+            J_link = np.array([
+                [ixx, ixy, ixz],
+                [ixy, iyy, iyz],
+                [ixz, iyz, izz],
+            ], dtype=np.float64)
+
+            links.append((m, pos, J_link))
+
+        if not links:
             raise ValueError('No link with <inertial>/<mass> found in SDF')
 
-        inertia_el: None | ET.Element = best_link.find('inertial/inertia')
-        if inertia_el is None:
-            raise ValueError('No link with inertial/inertia found in SDF')
+        total_mass = sum(m for m, _, _ in links)
+        com = sum(m * pos for m, pos, _ in links) / total_mass
 
-        ixx = float(inertia_el.findtext('ixx', '0'))
-        iyy = float(inertia_el.findtext('iyy', '0'))
-        izz = float(inertia_el.findtext('izz', '0'))
-        ixy = float(inertia_el.findtext('ixy', '0'))
-        ixz = float(inertia_el.findtext('ixz', '0'))
-        iyz = float(inertia_el.findtext('iyz', '0'))
+        J = np.zeros((3, 3), dtype=np.float64)
+        for m, pos, J_link in links:
+            d = pos - com
+            J += J_link + m * (np.dot(d, d) * np.eye(3) - np.outer(d, d))
 
-        J = np.array([
-            [ixx, ixy, ixz],
-            [ixy, iyy, iyz],
-            [ixz, iyz, izz],
-        ], dtype=np.float64)
-
-        return best_mass, J
+        return total_mass, J
 
     def _extract_motors(self):
         """Extract motor parameters and positions from MulticopterMotorModel plugins."""

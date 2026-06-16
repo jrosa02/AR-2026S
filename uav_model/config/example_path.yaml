@@ -1,17 +1,35 @@
-# Diagonal circle: center (0, 0, 2), radius 1, tilted 45 deg around X-axis.
-# z ranges from 1.293 (bottom) to 2.707 (top) as the drone orbits.
-# 12 waypoints, closed loop (last = first).
+# Two-phase net-pattern survey path (auto-generated).
+# Phase 1: 7 horizontal rows  (14 corners)
+# Phase 2: 7 vertical columns (14 corners)
+# Total: 29 waypoints | ALT=1.5 m | SPACING=0.5 m | V_survey=1.5 m/s | V_trans=0.8 m/s | TOL=0.25 m
+# Velocities: bisector-blend of in/out directions (continuous flow).
 waypoints:
-  - {x:  1.000, y:  0.000, z: 2.000, yaw: 0.0, tolerance: 0.10}
-  - {x:  0.866, y:  0.354, z: 2.354, yaw: 0.0, tolerance: 0.10}
-  - {x:  0.500, y:  0.612, z: 2.612, yaw: 0.0, tolerance: 0.10}
-  - {x:  0.000, y:  0.707, z: 2.707, yaw: 0.0, tolerance: 0.10}
-  - {x: -0.500, y:  0.612, z: 2.612, yaw: 0.0, tolerance: 0.10}
-  - {x: -0.866, y:  0.354, z: 2.354, yaw: 0.0, tolerance: 0.10}
-  - {x: -1.000, y:  0.000, z: 2.000, yaw: 0.0, tolerance: 0.10}
-  - {x: -0.866, y: -0.354, z: 1.646, yaw: 0.0, tolerance: 0.10}
-  - {x: -0.500, y: -0.612, z: 1.388, yaw: 0.0, tolerance: 0.10}
-  - {x:  0.000, y: -0.707, z: 1.293, yaw: 0.0, tolerance: 0.10}
-  - {x:  0.500, y: -0.612, z: 1.388, yaw: 0.0, tolerance: 0.10}
-  - {x:  0.866, y: -0.354, z: 1.646, yaw: 0.0, tolerance: 0.10}
-  - {x:  1.000, y:  0.000, z: 2.000, yaw: 0.0, tolerance: 0.10}
+  - {x:  0.000, y:  0.000, z: 1.500, vx: -0.566, vy: -0.566, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x: -1.500, y: -1.500, z: 1.500, vx:  1.500, vy:  0.000, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x:  1.500, y: -1.500, z: 1.500, vx:  0.566, vy:  0.566, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x:  1.500, y: -1.000, z: 1.500, vx: -1.061, vy:  1.061, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x: -1.500, y: -1.000, z: 1.500, vx: -0.566, vy:  0.566, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x: -1.500, y: -0.500, z: 1.500, vx:  1.061, vy:  1.061, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x:  1.500, y: -0.500, z: 1.500, vx:  0.566, vy:  0.566, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x:  1.500, y:  0.000, z: 1.500, vx: -1.061, vy:  1.061, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x: -1.500, y:  0.000, z: 1.500, vx: -0.566, vy:  0.566, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x: -1.500, y:  0.500, z: 1.500, vx:  1.061, vy:  1.061, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x:  1.500, y:  0.500, z: 1.500, vx:  0.566, vy:  0.566, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x:  1.500, y:  1.000, z: 1.500, vx: -1.061, vy:  1.061, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x: -1.500, y:  1.000, z: 1.500, vx: -0.566, vy:  0.566, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x: -1.500, y:  1.500, z: 1.500, vx:  1.061, vy:  1.061, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x:  1.500, y:  1.500, z: 1.500, vx: -0.566, vy: -0.566, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x: -1.500, y: -1.500, z: 1.500, vx:  0.000, vy:  1.500, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x: -1.500, y:  1.500, z: 1.500, vx:  0.566, vy:  0.566, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x: -1.000, y:  1.500, z: 1.500, vx:  1.061, vy: -1.061, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x: -1.000, y: -1.500, z: 1.500, vx:  0.566, vy: -0.566, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x: -0.500, y: -1.500, z: 1.500, vx:  1.061, vy:  1.061, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x: -0.500, y:  1.500, z: 1.500, vx:  0.566, vy:  0.566, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x:  0.000, y:  1.500, z: 1.500, vx:  1.061, vy: -1.061, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x:  0.000, y: -1.500, z: 1.500, vx:  0.566, vy: -0.566, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x:  0.500, y: -1.500, z: 1.500, vx:  1.061, vy:  1.061, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x:  0.500, y:  1.500, z: 1.500, vx:  0.566, vy:  0.566, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x:  1.000, y:  1.500, z: 1.500, vx:  1.061, vy: -1.061, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x:  1.000, y: -1.500, z: 1.500, vx:  0.566, vy: -0.566, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x:  1.500, y: -1.500, z: 1.500, vx:  1.061, vy:  1.061, vz:  0.000, yaw: 0.0, tolerance: 0.35}
+  - {x:  1.500, y:  1.500, z: 1.500, vx:  0.000, vy:  0.000, vz:  0.000, yaw: 0.0, tolerance: 0.35}

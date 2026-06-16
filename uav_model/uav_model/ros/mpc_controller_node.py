@@ -55,8 +55,8 @@ class _Mode(enum.Enum):
 
 
 def _waypoint_to_goal(wp) -> tuple:
-    """Extract (position, yaw) from a Waypoint message."""
-    return np.array([wp.x, wp.y, wp.z]), float(wp.yaw)
+    """Extract (position, yaw, velocity) from a Waypoint message."""
+    return np.array([wp.x, wp.y, wp.z]), float(wp.yaw), np.array([wp.vx, wp.vy, wp.vz])
 
 
 class MPCControllerNode(Node):
@@ -143,6 +143,7 @@ class MPCControllerNode(Node):
         self._mode = _Mode.IDLE
         self._waypoints: list = []
         self._wp_idx: int = 0
+        self._goal_vel: np.ndarray = np.zeros(3)
         self._active_goal_handle = None
         self._done_event: threading.Event | None = None
 
@@ -228,9 +229,10 @@ class MPCControllerNode(Node):
             state = self._uav_state
             goal = self._goal.copy()
             yaw = self._goal_yaw
+            goal_vel = self._goal_vel.copy()
 
         # Solve outside lock — _mpc_cb is MutuallyExclusive so no concurrent call
-        flat = self._mpc.compute(state, goal, yaw)
+        flat = self._mpc.compute(state, goal, yaw, goal_vel)
 
         with self._lock:
             self._flat_setpoint = flat
@@ -282,7 +284,7 @@ class MPCControllerNode(Node):
                     self._done_event.set()
             else:
                 nxt = self._waypoints[self._wp_idx]
-                self._goal, self._goal_yaw = _waypoint_to_goal(nxt)
+                self._goal, self._goal_yaw, self._goal_vel = _waypoint_to_goal(nxt)
 
     # ------------------------------------------------------------------
     # Action server callbacks
@@ -315,7 +317,7 @@ class MPCControllerNode(Node):
             self._waypoints = waypoints
             self._wp_idx = 0
             self._mode = _Mode.FOLLOWING
-            self._goal, self._goal_yaw = _waypoint_to_goal(waypoints[0])
+            self._goal, self._goal_yaw, self._goal_vel = _waypoint_to_goal(waypoints[0])
 
         result = FollowWaypoints.Result()
 

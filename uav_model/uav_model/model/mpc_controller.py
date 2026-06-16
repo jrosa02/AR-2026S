@@ -105,6 +105,7 @@ class MPCController:
         state: UAVState,
         goal: np.ndarray,
         yaw: float = 0.0,
+        goal_vel: np.ndarray | None = None,
     ) -> UAVFlatState:
         """Solve the MPC QP and return a UAVFlatState setpoint for Mellinger.
 
@@ -122,6 +123,7 @@ class MPCController:
         p0 = np.asarray(state.position, dtype=np.float64)
         v0 = np.asarray(state.velocity, dtype=np.float64)
         goal = np.asarray(goal, dtype=np.float64)
+        gv = np.zeros(3) if goal_vel is None else np.asarray(goal_vel, dtype=np.float64)
 
         # Velocity linear constraint: bounds shift with current velocity
         v_free = np.concatenate([v0[i] * np.ones(N) for i in range(3)])
@@ -140,7 +142,7 @@ class MPCController:
         result = minimize(
             self._cost_and_grad,
             z_warm,
-            args=(p0, v0, goal),
+            args=(p0, v0, goal, gv),
             method='SLSQP',
             jac=True,
             bounds=self._acc_bounds,
@@ -189,6 +191,7 @@ class MPCController:
         p0: np.ndarray,
         v0: np.ndarray,
         goal: np.ndarray,
+        goal_vel: np.ndarray,
     ):
         """Compute QP cost and analytic gradient for SLSQP."""
         N = self._N
@@ -208,15 +211,16 @@ class MPCController:
         ])
 
         ep = P - goal[:, np.newaxis]  # position error (3, N)
+        V_err = V - goal_vel[:, np.newaxis]  # velocity error vs desired orbit speed
 
         J = (
             0.5 * np.sum(self._Qp * ep ** 2)
-            + 0.5 * np.sum(self._p.Q_vel[:, np.newaxis] * V ** 2)
+            + 0.5 * np.sum(self._p.Q_vel[:, np.newaxis] * V_err ** 2)
             + 0.5 * sum(self._p.R_acc[i] * np.dot(a_axes[i], a_axes[i]) for i in range(3))
         )
 
         Qp_ep = self._Qp * ep
-        Qv_V = self._p.Q_vel[:, np.newaxis] * V
+        Qv_V = self._p.Q_vel[:, np.newaxis] * V_err
         grad = np.concatenate([
             self._B_pos.T @ Qp_ep[i] + self._B_vel.T @ Qv_V[i] + self._p.R_acc[i] * a_axes[i]
             for i in range(3)

@@ -39,6 +39,9 @@ def _parse_waypoints(data: dict) -> list[Waypoint]:
         if 'tolerance' not in entry:
             raise ValueError(f"Waypoint {i}: missing required field 'tolerance'")
         wp.tolerance = float(entry['tolerance'])
+        wp.vx = float(entry.get('vx', 0.0))
+        wp.vy = float(entry.get('vy', 0.0))
+        wp.vz = float(entry.get('vz', 0.0))
         waypoints.append(wp)
     return waypoints
 
@@ -102,13 +105,12 @@ class PathPublisherNode(Node):
         )
 
     def _result_cb(self, future) -> None:
-        """Log result and shut down."""
+        """Log result; keep node alive so the drone can be observed after path completion."""
         result = future.result().result
         self.get_logger().info(
             f'Done: {result.message} '
             f'({result.waypoints_reached}/{len(self._waypoints)} reached)'
         )
-        rclpy.shutdown()
 
 
 def main(args=None):

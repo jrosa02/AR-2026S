@@ -1,7 +1,5 @@
 mpc_controller:
   ros__parameters:
-    odom_topic: "/uav_model/odom"
-    control_topic: "/cf_control/control_command"
     control_rate_hz: 100.0
     mpc_rate_hz: 20.0
     mpc_horizon: 20

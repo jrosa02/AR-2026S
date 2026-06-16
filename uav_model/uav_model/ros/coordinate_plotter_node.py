@@ -27,6 +27,7 @@ import threading
 import matplotlib
 import numpy as np
 import rclpy
+import yaml
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
 
@@ -70,9 +71,24 @@ class CoordinatePlotterNode(Node):
         super().__init__('coordinate_plotter')
         self.declare_parameter('odom_topic', '/crazyflie/odom')
         self.declare_parameter('save_dir', '/home/developer/ros2_ws/src/plots')
+        self.declare_parameter('path_file', '')
 
         odom_topic = self.get_parameter('odom_topic').value
         self._save_dir = self.get_parameter('save_dir').value
+        path_file = self.get_parameter('path_file').value
+
+        self._waypoints: list[tuple[float, float, float]] = []
+        if path_file:
+            try:
+                with open(path_file) as f:
+                    data = yaml.safe_load(f)
+                self._waypoints = [
+                    (float(wp['x']), float(wp['y']), float(wp['z']))
+                    for wp in data.get('waypoints', [])
+                ]
+                self.get_logger().info(f'Loaded {len(self._waypoints)} waypoints from {path_file}')
+            except Exception as e:
+                self.get_logger().warning(f'Could not load path_file {path_file}: {e}')
 
         self._lock = threading.Lock()
         self._t: list = []
@@ -122,24 +138,38 @@ class CoordinatePlotterNode(Node):
         ax_z = fig.add_subplot(gs[2, 0], sharex=ax_x)
         ax_xy = fig.add_subplot(gs[:, 1])
 
-        n = np.arange(len(x))
-        for ax, data, label, color in zip(
+        wp_x = [wp[0] for wp in self._waypoints]
+        wp_y = [wp[1] for wp in self._waypoints]
+        wp_z = [wp[2] for wp in self._waypoints]
+
+        for ax, data, wp_vals, label, color in zip(
             [ax_x, ax_y, ax_z],
             [x, y, z],
+            [wp_x, wp_y, wp_z],
             ['x [m]', 'y [m]', 'z [m]'],
             ['tab:blue', 'tab:orange', 'tab:green'],
         ):
             ax.plot(t, data, color=color, linewidth=1.2)
             ax.set_ylabel(label)
             ax.grid(True, alpha=0.3)
+            for val in wp_vals:
+                ax.axhline(val, color='gray', linewidth=0.7, linestyle='--', alpha=0.5)
 
-        ax_x.set_title('Position vs Sample')
-        ax_z.set_xlabel('sample')
+        ax_x.set_title('Position vs Time')
+        ax_z.set_xlabel('t [s]')
 
         # x-y top-down path
         ax_xy.plot(x, y, color='tab:purple', linewidth=1.2)
         ax_xy.plot(x[0], y[0], 'go', markersize=7, label='start')
         ax_xy.plot(x[-1], y[-1], 'rs', markersize=7, label='end')
+
+        if self._waypoints:
+            ax_xy.plot(wp_x, wp_y, 'D--', color='gray', markersize=5,
+                       linewidth=0.8, alpha=0.6, label='waypoints')
+            for i, (wx, wy) in enumerate(zip(wp_x, wp_y)):
+                ax_xy.annotate(str(i), (wx, wy), textcoords='offset points',
+                               xytext=(4, 4), fontsize=6, color='dimgray')
+
         ax_xy.set_xlabel('x [m]')
         ax_xy.set_ylabel('y [m]')
         ax_xy.set_title('Top-down Path (x-y)')

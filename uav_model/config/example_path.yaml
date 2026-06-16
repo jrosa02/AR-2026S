@@ -2,16 +2,16 @@
 # z ranges from 1.293 (bottom) to 2.707 (top) as the drone orbits.
 # 12 waypoints, closed loop (last = first).
 waypoints:
-  - {x:  1.000, y:  0.000, z: 2.000, yaw: 0.0, tolerance: 0.50}
-  - {x:  0.866, y:  0.354, z: 2.354, yaw: 0.0, tolerance: 0.50}
-  - {x:  0.500, y:  0.612, z: 2.612, yaw: 0.0, tolerance: 0.50}
-  - {x:  0.000, y:  0.707, z: 2.707, yaw: 0.0, tolerance: 0.50}
-  - {x: -0.500, y:  0.612, z: 2.612, yaw: 0.0, tolerance: 0.50}
-  - {x: -0.866, y:  0.354, z: 2.354, yaw: 0.0, tolerance: 0.50}
-  - {x: -1.000, y:  0.000, z: 2.000, yaw: 0.0, tolerance: 0.50}
-  - {x: -0.866, y: -0.354, z: 1.646, yaw: 0.0, tolerance: 0.50}
-  - {x: -0.500, y: -0.612, z: 1.388, yaw: 0.0, tolerance: 0.50}
-  - {x:  0.000, y: -0.707, z: 1.293, yaw: 0.0, tolerance: 0.50}
-  - {x:  0.500, y: -0.612, z: 1.388, yaw: 0.0, tolerance: 0.50}
-  - {x:  0.866, y: -0.354, z: 1.646, yaw: 0.0, tolerance: 0.50}
-  - {x:  1.000, y:  0.000, z: 2.000, yaw: 0.0, tolerance: 0.50}
+  - {x:  1.000, y:  0.000, z: 2.000, yaw: 0.0, tolerance: 0.10}
+  - {x:  0.866, y:  0.354, z: 2.354, yaw: 0.0, tolerance: 0.10}
+  - {x:  0.500, y:  0.612, z: 2.612, yaw: 0.0, tolerance: 0.10}
+  - {x:  0.000, y:  0.707, z: 2.707, yaw: 0.0, tolerance: 0.10}
+  - {x: -0.500, y:  0.612, z: 2.612, yaw: 0.0, tolerance: 0.10}
+  - {x: -0.866, y:  0.354, z: 2.354, yaw: 0.0, tolerance: 0.10}
+  - {x: -1.000, y:  0.000, z: 2.000, yaw: 0.0, tolerance: 0.10}
+  - {x: -0.866, y: -0.354, z: 1.646, yaw: 0.0, tolerance: 0.10}
+  - {x: -0.500, y: -0.612, z: 1.388, yaw: 0.0, tolerance: 0.10}
+  - {x:  0.000, y: -0.707, z: 1.293, yaw: 0.0, tolerance: 0.10}
+  - {x:  0.500, y: -0.612, z: 1.388, yaw: 0.0, tolerance: 0.10}
+  - {x:  0.866, y: -0.354, z: 1.646, yaw: 0.0, tolerance: 0.10}
+  - {x:  1.000, y:  0.000, z: 2.000, yaw: 0.0, tolerance: 0.10}

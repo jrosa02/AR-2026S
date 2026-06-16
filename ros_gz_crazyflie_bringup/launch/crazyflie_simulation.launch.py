@@ -176,7 +176,7 @@ def generate_launch_description():
         package='uav_model',
         executable='coordinate_plotter_node',
         name='coordinate_plotter',
-        parameters=[{'odom_topic': '/crazyflie/odom'}, _sim_time],
+        parameters=[{'odom_topic': '/crazyflie/odom', 'path_file': path_file}, _sim_time],
         output='screen',
         condition=IfCondition(use_plot),
     )
